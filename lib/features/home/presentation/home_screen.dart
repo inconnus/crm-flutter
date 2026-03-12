@@ -15,6 +15,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 245, 245, 245),
       body: SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(0),
         child: Stack(
           children: [
