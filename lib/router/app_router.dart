@@ -1,3 +1,4 @@
+import 'package:crm/features/home/presentation/home_screen%20copy.dart';
 import 'package:crm/features/home/presentation/home_screen.dart';
 import 'package:crm/router/presentation/navigation_bar.dart';
 import 'package:crm/router/presentation/scaffold.dart';
@@ -22,7 +23,7 @@ final GoRouter router = GoRouter(
           routes: [GoRoute(path: '/home', builder: (context, state) => const HomeScreen())],
         ),
         StatefulShellBranch(
-          routes: [GoRoute(path: '/home2', builder: (context, state) => const HomeScreen())],
+          routes: [GoRoute(path: '/home2', builder: (context, state) => const HomeScreen2())],
         ),
         StatefulShellBranch(
           routes: [GoRoute(path: '/home3', builder: (context, state) => const HomeScreen())],
