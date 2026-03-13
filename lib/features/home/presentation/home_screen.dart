@@ -16,15 +16,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final double initialSheetSize = 0.8;
   late final ValueNotifier<double> _parallaxOffset = ValueNotifier(0.0);
   final DraggableScrollableController _sheetController = DraggableScrollableController();
+  double _currentInitialFraction = 0.5;
+  String qrData = DateTime.now().millisecondsSinceEpoch.toString();
+
+  @override
+  void initState() {
+    super.initState();
+    _sheetController.addListener(_checkRefreshThreshold);
+  }
+
+  void _checkRefreshThreshold() {
+    double currentSize = _sheetController.size;
+    if (currentSize <= _currentInitialFraction - 0.18) {
+      setState(() {
+        qrData = DateTime.now().millisecondsSinceEpoch.toString();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final double screenHeight = MediaQuery.of(context).size.height;
-
     const double topSpacePixels = 335;
-
-    // 3. แปลงเป็นค่า Fraction (0.0 - 1.0)
-    // สูตร: (ความสูงทั้งหมด - ระยะที่อยากให้ว่าง) / ความสูงทั้งหมด
     final double initialFraction = (screenHeight - topSpacePixels) / screenHeight;
+    _currentInitialFraction = initialFraction;
+    print('rebuild');
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -87,7 +103,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   }).toList(),
                 ),
                 Text('ดึงลงเพื่อสแกน', style: TextStyle(color: Colors.grey)),
-                QrImageView(data: '1234567890', version: QrVersions.auto, size: 180),
+                QrImageView(data: qrData, version: QrVersions.auto, size: 160),
               ],
             ),
           ),
@@ -96,7 +112,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           DraggableScrollableSheet(
             controller: _sheetController,
             initialChildSize: initialFraction,
-            minChildSize: initialFraction - 0.2,
+            minChildSize: initialFraction - 0.18,
             maxChildSize: 1,
             snap: true,
             snapAnimationDuration: const Duration(milliseconds: 100),
