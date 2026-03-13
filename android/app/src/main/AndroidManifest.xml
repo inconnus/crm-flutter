@@ -3,6 +3,8 @@
         android:label="crm"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data android:name="com.google.android.geo.API_KEY"
+               android:value="AIzaSyCnFuiiOd8YXRYev1tvuZKhwGq75h3X_0c"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
