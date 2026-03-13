@@ -187,7 +187,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: Row(
                           spacing: 10,
                           children: [
-                            Menu(text: 'จองคิว', icon: Icons.calendar_month_outlined, backgroundColor: Color(0xFFcd2a2f), textColor: Colors.white),
+                            Menu(
+                              text: 'จองคิว',
+                              icon: Icons.calendar_month_outlined,
+                              backgroundColor: Color(0xFFcd2a2f),
+                              textColor: Colors.white,
+                              onTap: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  useRootNavigator: true,
+                                  backgroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(40))),
+                                  sheetAnimationStyle: AnimationStyle(duration: const Duration(milliseconds: 150)),
+                                  builder: (BuildContext builderContext) {
+                                    return Container(
+                                      height: 200, // Set the desired height
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: <Widget>[
+                                            const Text('This is a modal bottom sheet.'),
+                                            const SizedBox(height: 20),
+                                            ElevatedButton(
+                                              child: const Text('Close'),
+                                              onPressed: () {
+                                                Navigator.pop(builderContext); // Dismiss the bottom sheet
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
                             Menu(text: 'ประวัติ', icon: Icons.history_rounded),
                             Menu(text: 'รางวัล', icon: Icons.wallet_giftcard_rounded),
                           ],
@@ -294,36 +329,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 class Menu extends ConsumerWidget {
-  const Menu({super.key, required this.text, required this.icon, this.backgroundColor = Colors.white, this.textColor = const Color(0xFFcd2a2f)});
+  const Menu({
+    super.key,
+    required this.text,
+    required this.icon,
+    this.backgroundColor = Colors.white,
+    this.textColor = const Color(0xFFcd2a2f),
+    this.onTap,
+  });
   final String text;
   final Color backgroundColor;
   final Color textColor;
   final IconData icon;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Expanded(
-      child: Container(
-        height: 50,
-        decoration: ShapeDecoration(
-          // gradient: LinearGradient(colors: [Color(0xFFb81d22), color], begin: Alignment.topCenter, end: Alignment.bottomCenter),
-          color: backgroundColor,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 50,
+          decoration: ShapeDecoration(
+            // gradient: LinearGradient(colors: [Color(0xFFb81d22), color], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+            color: backgroundColor,
 
-          shadows: [BoxShadow(color: Colors.grey.withAlpha(50), spreadRadius: 0, blurRadius: 10, offset: const Offset(0, 0))],
-          shape: ContinuousRectangleBorder(
-            borderRadius: BorderRadius.circular(40),
-            side: BorderSide(color: Colors.white),
+            shadows: [BoxShadow(color: Colors.grey.withAlpha(50), spreadRadius: 0, blurRadius: 10, offset: const Offset(0, 0))],
+            shape: ContinuousRectangleBorder(
+              borderRadius: BorderRadius.circular(40),
+              side: BorderSide(color: Colors.white),
+            ),
           ),
-        ),
-        child: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: textColor),
-              SizedBox(width: 4),
-              Text(text, style: TextStyle(color: textColor)),
-              // Icon(Icons.chevron_right_rounded, color: Colors.white),
-            ],
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: textColor),
+                SizedBox(width: 4),
+                Text(text, style: TextStyle(color: textColor)),
+                // Icon(Icons.chevron_right_rounded, color: Colors.white),
+              ],
+            ),
           ),
         ),
       ),
