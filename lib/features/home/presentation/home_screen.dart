@@ -1,6 +1,9 @@
+import 'dart:math';
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -16,7 +19,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final double screenHeight = MediaQuery.of(context).size.height;
 
-    const double topSpacePixels = 325;
+    const double topSpacePixels = 335;
 
     // 3. แปลงเป็นค่า Fraction (0.0 - 1.0)
     // สูตร: (ความสูงทั้งหมด - ระยะที่อยากให้ว่าง) / ความสูงทั้งหมด
@@ -29,12 +32,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ValueListenableBuilder(
             valueListenable: _parallaxOffset,
             builder: (context, value, child) {
+              double pos = value.clamp(double.negativeInfinity, 0);
               return Transform.translate(
-                offset: Offset(0, value), // ขยับตามค่าที่คำนวณ
+                offset: Offset(0, pos), // ขยับตามค่าที่คำนวณ
                 child: RepaintBoundary(
                   child: Stack(
                     children: [
-                      Image.asset('assets/images/header.png'),
+                      Transform.translate(offset: Offset(0, pos * 0.2), child: Image.asset('assets/images/header.png')),
                       Column(
                         children: [
                           SizedBox(height: 100),
@@ -71,6 +75,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               );
                             }).toList(),
                           ),
+                          Text('ดึงลงเพื่อสแกน', style: TextStyle(color: Colors.grey)),
+                          QrImageView(data: '1234567890', version: QrVersions.auto, size: 180),
                         ],
                       ),
                     ],
@@ -93,8 +99,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
             child: DraggableScrollableSheet(
               initialChildSize: initialFraction,
-              minChildSize: initialFraction,
+              minChildSize: initialFraction - 0.2,
               maxChildSize: 1,
+              snap: true,
+              snapAnimationDuration: const Duration(milliseconds: 100),
+              snapSizes: [initialFraction],
               builder: (context, scrollController) {
                 return Container(
                   decoration: ShapeDecoration(
@@ -102,65 +111,87 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     color: Colors.white,
                     shadows: [BoxShadow(blurRadius: 10, color: Colors.black12)],
                   ),
-                  child: Column(
+                  child: Stack(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                        padding: const EdgeInsets.only(top: 5),
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          child: Container(
+                            width: 40,
+                            height: 6,
+                            decoration: BoxDecoration(color: const Color.fromARGB(255, 218, 218, 218), borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                      ),
+                      SingleChildScrollView(
+                        controller: scrollController,
+                        child: Column(
                           children: [
-                            CircleAvatar(
-                              radius: 22,
-                              backgroundImage: NetworkImage(
-                                'https://scontent.fbkk12-3.fna.fbcdn.net/v/t39.30808-6/460039832_1939010103263800_8042369095264618016_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=C-Pf_By57TEQ7kNvwHBZL9K&_nc_oc=AdnR4rzZyAT9mTWJPqOLcurg1eATka4FiQbuQlW7l6p-ipMvyVzlXeaHeTq2sXeq7uo&_nc_zt=23&_nc_ht=scontent.fbkk12-3.fna&_nc_gid=S9Zxa-uJLtOe5txuZDfO5w&_nc_ss=8&oh=00_AfwNvpOHz4n_ClyCn82U8EoNY1vCWZKN7yI6BqCTMRy-xw&oe=69B6D33A',
-                              ),
-                            ),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text("Chindanai Mala-eiam"),
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      // Icon(Icons.star_rounded, size: 20, color: Color(0xFFFFB200)),
-                                      Text(
-                                        '123 คะแนน',
-                                        style: TextStyle(color: Color(0xFFFFB200), fontSize: 16, fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
+                                  CircleAvatar(
+                                    radius: 22,
+                                    backgroundImage: NetworkImage(
+                                      'https://scontent.fbkk12-3.fna.fbcdn.net/v/t39.30808-6/460039832_1939010103263800_8042369095264618016_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=C-Pf_By57TEQ7kNvwHBZL9K&_nc_oc=AdnR4rzZyAT9mTWJPqOLcurg1eATka4FiQbuQlW7l6p-ipMvyVzlXeaHeTq2sXeq7uo&_nc_zt=23&_nc_ht=scontent.fbkk12-3.fna&_nc_gid=S9Zxa-uJLtOe5txuZDfO5w&_nc_ss=8&oh=00_AfwNvpOHz4n_ClyCn82U8EoNY1vCWZKN7yI6BqCTMRy-xw&oe=69B6D33A',
+                                    ),
                                   ),
+                                  SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text("Chindanai Mala-eiam"),
+                                        Row(
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            // Icon(Icons.star_rounded, size: 20, color: Color(0xFFFFB200)),
+                                            Text(
+                                              '123 คะแนน',
+                                              style: TextStyle(color: Color(0xFFFFB200), fontSize: 16, fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                                    decoration: BoxDecoration(color: Color(0xFFFFB200), borderRadius: BorderRadius.circular(35)),
+                                    child: Text('แลกคะแนน', style: TextStyle(color: Colors.white)),
+                                  ),
+                                  // Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text("สวัสดี"), Text("คุณ")]),
                                 ],
                               ),
                             ),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                              decoration: BoxDecoration(color: Color(0xFFFFB200), borderRadius: BorderRadius.circular(35)),
-                              child: Text('แลกคะแนน', style: TextStyle(color: Colors.white)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Row(
+                                spacing: 10,
+                                children: [
+                                  Menu(
+                                    text: 'จองคิว',
+                                    icon: Icons.calendar_month_outlined,
+                                    backgroundColor: Color(0xFFcd2a2f),
+                                    textColor: Colors.white,
+                                  ),
+                                  Menu(text: 'ประวัติ', icon: Icons.history_rounded),
+                                  Menu(text: 'รางวัล', icon: Icons.wallet_giftcard_rounded),
+                                ],
+                              ),
                             ),
-                            // Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text("สวัสดี"), Text("คุณ")]),
+                            ListView.builder(
+                              padding: EdgeInsets.zero,
+                              physics: NeverScrollableScrollPhysics(),
+                              shrinkWrap: true,
+                              itemCount: 50,
+                              itemBuilder: (context, index) => ListTile(title: Text("Item $index")),
+                            ),
                           ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          spacing: 10,
-                          children: [
-                            Menu(text: 'จองคิว', icon: Icons.calendar_month_outlined, backgroundColor: Color(0xFFcd2a2f), textColor: Colors.white),
-                            Menu(text: 'ประวัติ', icon: Icons.history_rounded),
-                            Menu(text: 'รางวัล', icon: Icons.wallet_giftcard_rounded),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: ListView.builder(
-                          padding: EdgeInsets.zero,
-                          controller: scrollController, // สำคัญ!
-                          itemCount: 50,
-                          itemBuilder: (context, index) => ListTile(title: Text("Item $index")),
                         ),
                       ),
                     ],
