@@ -1,6 +1,9 @@
+import 'dart:math';
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -10,138 +13,186 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final double initialSheetSize = 0.8;
+  late final ValueNotifier<double> _parallaxOffset = ValueNotifier(0.0);
+  final DraggableScrollableController _sheetController = DraggableScrollableController();
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+
+    const double topSpacePixels = 335;
+
+    // 3. แปลงเป็นค่า Fraction (0.0 - 1.0)
+    // สูตร: (ความสูงทั้งหมด - ระยะที่อยากให้ว่าง) / ความสูงทั้งหมด
+    final double initialFraction = (screenHeight - topSpacePixels) / screenHeight;
     return Scaffold(
       backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: Colors.white,
-            surfaceTintColor: Colors.transparent,
-            expandedHeight: 335,
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(20),
-              child: Container(
-                height: 10,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(55), topRight: Radius.circular(55)),
-                  boxShadow: [BoxShadow(color: Colors.grey.withAlpha(20), spreadRadius: 2, blurRadius: 5, offset: const Offset(0, -10))],
-                ),
-              ),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                margin: EdgeInsets.only(bottom: 12),
-                decoration: ShapeDecoration(
-                  shape: ContinuousRectangleBorder(
-                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(135), bottomRight: Radius.circular(135)),
+      body: Stack(
+        children: [
+          // --- ชั้นหลัง (Parallax Header) ---
+          AnimatedBuilder(
+            animation: _sheetController,
+            builder: (context, child) {
+              double currentExtent = 0.0;
+              if (_sheetController.isAttached) {
+                currentExtent = _sheetController.size;
+              }
+              double delta = currentExtent - initialFraction;
+              double parallaxOffset = delta * -200;
+              double pos = parallaxOffset.clamp(double.negativeInfinity, 0);
+              return Transform.translate(
+                offset: Offset(0, pos), // ขยับตามค่าที่คำนวณ
+                child: RepaintBoundary(
+                  child: Stack(
+                    children: [
+                      Transform.translate(offset: Offset(0, pos * 0.2), child: Image.asset('assets/images/header.png')),
+                      child!,
+                    ],
                   ),
-                  image: DecorationImage(image: AssetImage('assets/images/header.png'), alignment: Alignment.topCenter),
-                  color: Colors.white,
-                  shadows: [BoxShadow(color: Colors.grey.withAlpha(20), spreadRadius: 2, blurRadius: 5, offset: const Offset(0, 0))],
                 ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 100),
-                    CarouselSlider(
-                      options: CarouselOptions(
-                        autoPlay: true,
-                        autoPlayInterval: Duration(seconds: 10),
-                        height: 210,
-                        enlargeCenterPage: true,
-                        viewportFraction: 0.85,
-                        enlargeFactor: 0.35,
-                        enlargeStrategy: CenterPageEnlargeStrategy.zoom,
-                      ),
-                      items: [1, 3, 2].map((i) {
-                        return Builder(
-                          builder: (BuildContext context) {
-                            return AspectRatio(
-                              aspectRatio: 16 / 9,
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 5),
-                                decoration: ShapeDecoration(
-                                  shape: ContinuousRectangleBorder(
-                                    borderRadius: BorderRadius.circular(95),
-                                    // side: BorderSide(color: Color.fromARGB(133, 237, 237, 237), width: 1),
-                                  ),
-                                  shadows: [BoxShadow(color: Colors.grey.withAlpha(100), spreadRadius: 2, blurRadius: 5, offset: const Offset(0, 0))],
-                                  image: DecorationImage(image: AssetImage('assets/images/s$i.jpg'), fit: BoxFit.cover),
-                                ),
+              );
+            },
+            child: Column(
+              children: [
+                SizedBox(height: 100),
+                CarouselSlider(
+                  options: CarouselOptions(
+                    autoPlay: true,
+                    autoPlayInterval: Duration(seconds: 10),
+                    height: 210,
+                    enlargeCenterPage: true,
+                    viewportFraction: 0.85,
+                    enlargeFactor: 0.35,
+                    enlargeStrategy: CenterPageEnlargeStrategy.zoom,
+                  ),
+                  items: [1, 3, 2].map((i) {
+                    return Builder(
+                      builder: (BuildContext context) {
+                        return AspectRatio(
+                          aspectRatio: 16 / 9,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 5),
+                            decoration: ShapeDecoration(
+                              shape: ContinuousRectangleBorder(
+                                borderRadius: BorderRadius.circular(95),
+                                // side: BorderSide(color: Color.fromARGB(133, 237, 237, 237), width: 1),
                               ),
-                            );
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          CircleAvatar(
-                            radius: 22,
-                            backgroundImage: NetworkImage(
-                              'https://scontent.fbkk12-3.fna.fbcdn.net/v/t39.30808-6/460039832_1939010103263800_8042369095264618016_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=C-Pf_By57TEQ7kNvwHBZL9K&_nc_oc=AdnR4rzZyAT9mTWJPqOLcurg1eATka4FiQbuQlW7l6p-ipMvyVzlXeaHeTq2sXeq7uo&_nc_zt=23&_nc_ht=scontent.fbkk12-3.fna&_nc_gid=S9Zxa-uJLtOe5txuZDfO5w&_nc_ss=8&oh=00_AfwNvpOHz4n_ClyCn82U8EoNY1vCWZKN7yI6BqCTMRy-xw&oe=69B6D33A',
+                              shadows: [BoxShadow(color: Colors.grey.withAlpha(100), spreadRadius: 2, blurRadius: 5, offset: const Offset(0, 0))],
+                              image: DecorationImage(image: AssetImage('assets/images/s$i.jpg'), fit: BoxFit.cover),
                             ),
                           ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        );
+                      },
+                    );
+                  }).toList(),
+                ),
+                Text('ดึงลงเพื่อสแกน', style: TextStyle(color: Colors.grey)),
+                QrImageView(data: '1234567890', version: QrVersions.auto, size: 180),
+              ],
+            ),
+          ),
+
+          // --- ชั้นหน้า (Draggable Sheet) ---
+          DraggableScrollableSheet(
+            controller: _sheetController,
+            initialChildSize: initialFraction,
+            minChildSize: initialFraction - 0.2,
+            maxChildSize: 1,
+            snap: true,
+            snapAnimationDuration: const Duration(milliseconds: 100),
+            snapSizes: [initialFraction],
+            builder: (context, scrollController) {
+              return Container(
+                decoration: ShapeDecoration(
+                  shape: ContinuousRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(100))),
+                  color: Colors.white,
+                  shadows: [BoxShadow(blurRadius: 10, color: Colors.black12)],
+                ),
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: Container(
+                          width: 40,
+                          height: 6,
+                          decoration: BoxDecoration(color: const Color.fromARGB(255, 218, 218, 218), borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ),
+                    SingleChildScrollView(
+                      controller: scrollController,
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text("Chindanai Mala-eiam"),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    // Icon(Icons.star_rounded, size: 20, color: Color(0xFFFFB200)),
-                                    Text(
-                                      '123 คะแนน',
-                                      style: TextStyle(color: Color(0xFFFFB200), fontSize: 16, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
+                                CircleAvatar(
+                                  radius: 22,
+                                  backgroundImage: NetworkImage(
+                                    'https://scontent.fbkk12-3.fna.fbcdn.net/v/t39.30808-6/460039832_1939010103263800_8042369095264618016_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=C-Pf_By57TEQ7kNvwHBZL9K&_nc_oc=AdnR4rzZyAT9mTWJPqOLcurg1eATka4FiQbuQlW7l6p-ipMvyVzlXeaHeTq2sXeq7uo&_nc_zt=23&_nc_ht=scontent.fbkk12-3.fna&_nc_gid=S9Zxa-uJLtOe5txuZDfO5w&_nc_ss=8&oh=00_AfwNvpOHz4n_ClyCn82U8EoNY1vCWZKN7yI6BqCTMRy-xw&oe=69B6D33A',
+                                  ),
                                 ),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text("Chindanai Mala-eiam"),
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          // Icon(Icons.star_rounded, size: 20, color: Color(0xFFFFB200)),
+                                          Text(
+                                            '123 คะแนน',
+                                            style: TextStyle(color: Color(0xFFFFB200), fontSize: 16, fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                                  decoration: BoxDecoration(color: Color(0xFFFFB200), borderRadius: BorderRadius.circular(35)),
+                                  child: Text('แลกคะแนน', style: TextStyle(color: Colors.white)),
+                                ),
+                                // Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text("สวัสดี"), Text("คุณ")]),
                               ],
                             ),
                           ),
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                            decoration: BoxDecoration(color: Color(0xFFFFB200), borderRadius: BorderRadius.circular(35)),
-                            child: Text('แลกคะแนน', style: TextStyle(color: Colors.white)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
+                              spacing: 10,
+                              children: [
+                                Menu(
+                                  text: 'จองคิว',
+                                  icon: Icons.calendar_month_outlined,
+                                  backgroundColor: Color(0xFFcd2a2f),
+                                  textColor: Colors.white,
+                                ),
+                                Menu(text: 'ประวัติ', icon: Icons.history_rounded),
+                                Menu(text: 'รางวัล', icon: Icons.wallet_giftcard_rounded),
+                              ],
+                            ),
                           ),
-                          // Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text("สวัสดี"), Text("คุณ")]),
+                          ListView.builder(
+                            padding: EdgeInsets.zero,
+                            physics: NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            itemCount: 50,
+                            itemBuilder: (context, index) => ListTile(title: Text("Item $index")),
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              child: Row(
-                spacing: 10,
-                children: [
-                  Menu(text: 'จองคิว', icon: Icons.calendar_month_outlined, backgroundColor: Color(0xFFcd2a2f), textColor: Colors.white),
-                  Menu(text: 'ประวัติ', icon: Icons.history_rounded),
-                  Menu(text: 'รางวัล', icon: Icons.wallet_giftcard_rounded),
-                ],
-              ),
-            ),
-          ),
-          SliverList.builder(
-            itemBuilder: (context, index) {
-              return ListTile(
-                leading: CircleAvatar(child: Text("${index + 1}")),
-                title: Text("รายการที่ ${index + 1}"),
-                subtitle: const Text("รายละเอียดเนื้อหาด้านล่าง Header"),
-                trailing: const Icon(Icons.chevron_right),
               );
             },
           ),
