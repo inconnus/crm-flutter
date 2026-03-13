@@ -40,7 +40,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     const double topSpacePixels = 335;
     final double initialFraction = (screenHeight - topSpacePixels) / screenHeight;
     _currentInitialFraction = initialFraction;
-    print('rebuild');
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -195,6 +194,88 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                     ),
+                    SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: 10,
+                        children: [
+                          SizedBox(height: 5),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('โปรโมชัน', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                Text('ดูทั้งหมด', style: TextStyle(color: Color(0xFFcd2a2f))),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: 140,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: 10,
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              separatorBuilder: (context, index) => const SizedBox(width: 10),
+                              itemBuilder: (context, index) {
+                                return Container(
+                                  width: 140,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    image: DecorationImage(image: AssetImage('assets/images/s1.jpg'), fit: BoxFit.cover),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: 10,
+                        children: [
+                          SizedBox(height: 5),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('สินค้าแนะนำ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                Text('ดูทั้งหมด', style: TextStyle(color: Color(0xFFcd2a2f))),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: GridView.builder(
+                              shrinkWrap: true,
+                              padding: const EdgeInsets.all(0),
+                              physics: const NeverScrollableScrollPhysics(), // Add this
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 20, // Recommended for a cleaner grid
+                                mainAxisSpacing: 20,
+                              ),
+                              itemCount: 10, // Don't forget to set an item count!
+                              itemBuilder: (context, index) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    image: DecorationImage(
+                                      image: NetworkImage('https://sushiro.co.th/wp-content/uploads/2025/10/new-gm-1920x1080-px.jpg'),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
                     SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) => ListTile(title: Text("Item $index"), leading: const Icon(Icons.circle, size: 10)),

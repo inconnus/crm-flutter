@@ -17,8 +17,7 @@ class NavigationBarContainer extends ConsumerWidget {
 
     return Align(
       alignment: AlignmentGeometry.bottomCenter,
-      child: Padding(
-        padding: EdgeInsetsGeometry.all(33),
+      child: SafeArea(
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(40),
