@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:page_flip/page_flip.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -197,27 +198,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   context: context,
                                   useRootNavigator: true,
                                   backgroundColor: Colors.white,
+
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(40))),
                                   sheetAnimationStyle: AnimationStyle(duration: const Duration(milliseconds: 150)),
                                   builder: (BuildContext builderContext) {
-                                    return Container(
-                                      height: 200, // Set the desired height
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Center(
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: <Widget>[
-                                            const Text('This is a modal bottom sheet.'),
-                                            const SizedBox(height: 20),
-                                            ElevatedButton(
-                                              child: const Text('Close'),
-                                              onPressed: () {
-                                                Navigator.pop(builderContext); // Dismiss the bottom sheet
-                                              },
-                                            ),
-                                          ],
+                                    return Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: <Widget>[
+                                        Expanded(
+                                          child: PageFlipWidget(
+                                            backgroundColor: Colors.white,
+                                            children: <Widget>[
+                                              for (var i = 0; i < 10; i++)
+                                                Center(
+                                                  child: Image.network(
+                                                    'https://instagram.fbkk28-1.fna.fbcdn.net/v/t39.30808-6/574349151_1509917023421438_7129930871877634104_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ig_cache_key=Mzc1NDU0NjI0MzAyOTU0OTQzOA%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6InhwaWRzLjEwODB4MTM1MC5zZHIuQzMifQ%3D%3D&_nc_ohc=ekEIaJAQZ8kQ7kNvwFweoO3&_nc_oc=AdnutaOp2m9x8l27lyl_2nRU9VkkoUZNmsZEuO96ArCwwLcOoXt0STKyKr8_b9Ag7Rc&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=instagram.fbkk28-1.fna&_nc_gid=xkAaybHlz66x_yvipaQ7cw&_nc_ss=8&oh=00_AfxU6EuH8jAWgFhBY9aKKbx99u3IOm3W2TQIa6Ekyadhbg&oe=69BB1F89',
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
+                                      ],
                                     );
                                   },
                                 );
