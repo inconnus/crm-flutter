@@ -197,27 +197,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 showModalBottomSheet(
                                   context: context,
                                   useRootNavigator: true,
+                                  isScrollControlled: true,
                                   backgroundColor: Colors.white,
                                   //
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(40))),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
                                   sheetAnimationStyle: AnimationStyle(duration: const Duration(milliseconds: 150)),
                                   builder: (BuildContext builderContext) {
-                                    return Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: <Widget>[
-                                        Expanded(
-                                          child: PageFlipWidget(
-                                            backgroundColor: Colors.white,
-                                            children: <Widget>[
-                                              for (var i = 0; i < 10; i++)
-                                                Center(
-                                                  child: Image.network(
-                                                    'https://instagram.fbkk28-1.fna.fbcdn.net/v/t39.30808-6/574349151_1509917023421438_7129930871877634104_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ig_cache_key=Mzc1NDU0NjI0MzAyOTU0OTQzOA%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6InhwaWRzLjEwODB4MTM1MC5zZHIuQzMifQ%3D%3D&_nc_ohc=ekEIaJAQZ8kQ7kNvwFweoO3&_nc_oc=AdnutaOp2m9x8l27lyl_2nRU9VkkoUZNmsZEuO96ArCwwLcOoXt0STKyKr8_b9Ag7Rc&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=instagram.fbkk28-1.fna&_nc_gid=xkAaybHlz66x_yvipaQ7cw&_nc_ss=8&oh=00_AfxU6EuH8jAWgFhBY9aKKbx99u3IOm3W2TQIa6Ekyadhbg&oe=69BB1F89',
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                        ),
+                                    return AutoSizedPageFlip(
+                                      imageUrls: const [
+                                        'http://www.normalsteak.in/i/n1.png',
+                                        'http://www.normalsteak.in/i/n2.png',
+                                        'http://www.normalsteak.in/i/n3.png',
+                                        'http://www.normalsteak.in/i/n4.png',
+                                        'http://www.normalsteak.in/i/n5.png',
+                                        'http://www.normalsteak.in/i/n6.png',
+                                        'http://www.normalsteak.in/i/n7.png',
+                                        'http://www.normalsteak.in/i/n8.png',
+                                        'http://www.normalsteak.in/i/n9.png',
+                                        'http://www.normalsteak.in/i/n10.png',
+                                        'http://www.normalsteak.in/i/n11.png',
+                                        'http://www.normalsteak.in/i/n12.png',
+                                        'http://www.normalsteak.in/i/n13.png',
+                                        'http://www.normalsteak.in/i/n14.png',
+                                        'http://www.normalsteak.in/i/n15.png',
+                                        'http://www.normalsteak.in/i/n16.png',
                                       ],
                                     );
                                   },
@@ -374,6 +377,69 @@ class Menu extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class AutoSizedPageFlip extends StatefulWidget {
+  final List<String> imageUrls;
+  const AutoSizedPageFlip({super.key, required this.imageUrls});
+
+  @override
+  State<AutoSizedPageFlip> createState() => _AutoSizedPageFlipState();
+}
+
+class _AutoSizedPageFlipState extends State<AutoSizedPageFlip> {
+  double? _aspectRatio;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAspectRatio();
+  }
+
+  void _fetchAspectRatio() {
+    if (widget.imageUrls.isEmpty) return;
+    final stream = NetworkImage(widget.imageUrls.first).resolve(const ImageConfiguration());
+    late ImageStreamListener listener;
+    listener = ImageStreamListener((ImageInfo info, bool _) {
+      if (mounted) {
+        setState(() {
+          _aspectRatio = info.image.width / info.image.height;
+        });
+      }
+      stream.removeListener(listener);
+    });
+    stream.addListener(listener);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_aspectRatio == null) {
+      return const SizedBox(height: 300, child: Center(child: CircularProgressIndicator()));
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('เมนูอาหาร', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
+            ],
+          ),
+        ),
+        // Content
+        Flexible(
+          child: AspectRatio(
+            aspectRatio: _aspectRatio!,
+            child: PageFlipWidget(backgroundColor: Colors.white, imageUrls: widget.imageUrls),
+          ),
+        ),
+      ],
     );
   }
 }

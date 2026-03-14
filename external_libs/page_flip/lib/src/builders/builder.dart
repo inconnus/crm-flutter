@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ class PageFlipBuilder extends StatefulWidget {
     required this.child,
     required this.pageIndex,
     required this.isRightSwipe,
+    this.imageUrl,
   }) : super(key: key);
 
   final Animation<double> amount;
@@ -25,23 +27,60 @@ class PageFlipBuilder extends StatefulWidget {
   final Color? backgroundColor;
   final Widget child;
   final bool isRightSwipe;
+  final String? imageUrl;
 
   @override
   State<PageFlipBuilder> createState() => PageFlipBuilderState();
 }
 
 class PageFlipBuilderState extends State<PageFlipBuilder> {
-  final _boundaryKey = GlobalKey();
+  bool _isLoadingImage = false;
 
-  void _captureImage(Duration timeStamp, int index) async {
-    if (_boundaryKey.currentContext == null) return;
-    await Future.delayed(const Duration(milliseconds: 100));
-    if (mounted) {
-      final boundary = _boundaryKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-      final image = await boundary.toImage(pixelRatio: View.of(context).devicePixelRatio);
-      setState(() {
-        imageData[index] = image.clone();
+  @override
+  void initState() {
+    super.initState();
+    currentPageIndex.addListener(_checkLoadImage);
+    _checkLoadImage();
+  }
+
+  @override
+  void dispose() {
+    currentPageIndex.removeListener(_checkLoadImage);
+    super.dispose();
+  }
+
+  void _checkLoadImage() {
+    if (widget.imageUrl != null) {
+      final diff = (currentPageIndex.value - widget.pageIndex).abs();
+      if (diff <= 2) {
+        _loadImageFromUrl();
+      }
+    }
+  }
+
+  void _loadImageFromUrl() async {
+    if (widget.imageUrl == null || _isLoadingImage || imageData[widget.pageIndex] != null) return;
+    _isLoadingImage = true;
+    try {
+      final ImageStream stream = NetworkImage(widget.imageUrl!).resolve(ImageConfiguration.empty);
+      final Completer<ui.Image> completer = Completer<ui.Image>();
+      late ImageStreamListener listener;
+      listener = ImageStreamListener((ImageInfo frame, bool synchronousCall) {
+        stream.removeListener(listener);
+        if (!completer.isCompleted) completer.complete(frame.image);
+      }, onError: (dynamic error, StackTrace? stackTrace) {
+        stream.removeListener(listener);
+        if (!completer.isCompleted) completer.completeError(error);
       });
+      stream.addListener(listener);
+      final image = await completer.future;
+      if (mounted) {
+        setState(() {
+          imageData[widget.pageIndex] = image.clone();
+        });
+      }
+    } catch (e) {
+      // ignore
     }
   }
 
@@ -61,18 +100,17 @@ class PageFlipBuilderState extends State<PageFlipBuilder> {
             size: Size.infinite,
           );
         } else {
-          if (value == widget.pageIndex || (value == (widget.pageIndex + 1))) {
-            WidgetsBinding.instance.addPostFrameCallback(
-              (timeStamp) => _captureImage(timeStamp, currentPageIndex.value),
-            );
-          }
           if (widget.pageIndex == currentPageIndex.value || (widget.pageIndex == (currentPageIndex.value + 1))) {
+            Widget content = widget.child;
+            if (widget.imageUrl != null && imageData[widget.pageIndex] != null) {
+              content = RawImage(
+                image: imageData[widget.pageIndex]!,
+                fit: BoxFit.fill,
+              );
+            }
             return ColoredBox(
               color: widget.backgroundColor ?? Colors.black12,
-              child: RepaintBoundary(
-                key: _boundaryKey,
-                child: widget.child,
-              ),
+              child: content,
             );
           } else {
             return Container();

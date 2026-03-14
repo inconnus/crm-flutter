@@ -1,4 +1,3 @@
-import 'package:example/page.dart';
 import 'package:flutter/material.dart';
 import 'package:page_flip/page_flip.dart';
 
@@ -25,8 +24,8 @@ class _HomeScreenState extends State<HomeScreen> {
         lastPage: Container(
             color: Colors.white,
             child: const Center(child: Text('Last Page!'))),
-        children: <Widget>[
-          for (var i = 0; i < 10; i++) DemoPage(page: i),
+        imageUrls: <String>[
+          for (var i = 0; i < 10; i++) 'https://dummyimage.com/600x400/000/fff&text=Page+$i',
         ],
         onPageFlipped: (pageNumber) {
           debugPrint('onPageFlipped: (pageNumber) $pageNumber');

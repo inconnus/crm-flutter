@@ -4,24 +4,24 @@ import '../page_flip.dart';
 
 class PageFlipWidget extends StatefulWidget {
   final PageFlipController? controller;
+  final List<String> imageUrls;
   const PageFlipWidget({
     Key? key,
     this.duration = const Duration(milliseconds: 450),
     this.cutoffForward = 0.8,
     this.cutoffPrevious = 0.1,
     this.backgroundColor = Colors.white,
-    required this.children,
+    required this.imageUrls,
     this.initialIndex = 0,
     this.lastPage,
     this.isRightSwipe = false,
     this.onPageFlipped,
     this.onFlipStart,
     this.controller,
-  })  : assert(initialIndex < children.length, 'initialIndex cannot be greater than children length'),
+  })  : assert(initialIndex < imageUrls.length, 'initialIndex cannot be greater than imageUrls length'),
         super(key: key);
 
   final Color backgroundColor;
-  final List<Widget> children;
   final Duration duration;
   final int initialIndex;
   final Widget? lastPage;
@@ -70,10 +70,12 @@ class PageFlipWidgetState extends State<PageFlipWidget> with TickerProviderState
   void _setUp({bool isRefresh = false}) {
     _controllers.clear();
     pages.clear();
+    List<Widget> childrenWidgets = widget.imageUrls.map((url) => Image.network(url, fit: BoxFit.fill)).toList();
     if (widget.lastPage != null) {
-      widget.children.add(widget.lastPage!);
+      childrenWidgets.add(widget.lastPage!);
     }
-    for (var i = 0; i < widget.children.length; i++) {
+
+    for (var i = 0; i < childrenWidgets.length; i++) {
       final controller = AnimationController(
         value: 1,
         duration: widget.duration,
@@ -85,8 +87,9 @@ class PageFlipWidgetState extends State<PageFlipWidget> with TickerProviderState
         backgroundColor: widget.backgroundColor,
         isRightSwipe: widget.isRightSwipe,
         pageIndex: i,
+        imageUrl: (i < widget.imageUrls.length) ? widget.imageUrls[i] : null,
         key: Key('item$i'),
-        child: widget.children[i],
+        child: childrenWidgets[i],
       );
       pages.add(child);
     }
@@ -201,7 +204,6 @@ class PageFlipWidgetState extends State<PageFlipWidget> with TickerProviderState
       });
       currentPageIndex.value = pageNumber;
       currentWidget.value = pages[pageNumber];
-      imageData[pageNumber] = null;
       widget.onPageFlipped?.call(pageNumber);
     }
     currentPage.value = -1;
@@ -244,12 +246,7 @@ class PageFlipWidgetState extends State<PageFlipWidget> with TickerProviderState
         onHorizontalDragEnd: (details) => _onDragFinish(),
         child: Stack(
           fit: StackFit.expand,
-          children: <Widget>[
-            if (widget.lastPage != null) ...[
-              widget.lastPage!,
-            ],
-            if (pages.isNotEmpty) ...pages else const SizedBox.shrink(),
-          ],
+          children: pages,
         ),
       ),
     );
