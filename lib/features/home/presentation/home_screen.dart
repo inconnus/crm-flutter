@@ -200,7 +200,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   isScrollControlled: true,
                                   backgroundColor: Colors.white,
                                   //
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                                  shape: ContinuousRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(60))),
                                   sheetAnimationStyle: AnimationStyle(duration: const Duration(milliseconds: 150)),
                                   builder: (BuildContext builderContext) {
                                     return AutoSizedPageFlip(
