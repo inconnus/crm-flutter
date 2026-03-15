@@ -1,121 +1,127 @@
 import 'dart:async';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
-import '../page_flip.dart';
+
+import 'effects/flip_effect.dart';
+
+class PageFlipController {
+  _PageFlipWidgetState? _state;
+  void nextPage() => _state?.nextPage();
+  void previousPage() => _state?.previousPage();
+  void goToPage(int index) => _state?.goToPage(index);
+}
 
 class PageFlipWidget extends StatefulWidget {
-  final PageFlipController? controller;
   final List<String> imageUrls;
-  const PageFlipWidget({
-    Key? key,
-    this.duration = const Duration(milliseconds: 450),
-    this.cutoffForward = 0.8,
-    this.cutoffPrevious = 0.1,
-    this.backgroundColor = Colors.white,
-    required this.imageUrls,
-    this.initialIndex = 0,
-    this.lastPage,
-    this.isRightSwipe = false,
-    this.onPageFlipped,
-    this.onFlipStart,
-    this.controller,
-  })  : assert(initialIndex < imageUrls.length, 'initialIndex cannot be greater than imageUrls length'),
-        super(key: key);
-
-  final Color backgroundColor;
   final Duration duration;
+  final Color backgroundColor;
   final int initialIndex;
   final Widget? lastPage;
   final double cutoffForward;
   final double cutoffPrevious;
   final bool isRightSwipe;
-  final void Function(int pageNumber)? onPageFlipped;
-  final void Function()? onFlipStart;
+  final PageFlipController? controller;
+  final ValueChanged<int>? onPageFlipped;
+  final VoidCallback? onFlipStart;
+
+  const PageFlipWidget({
+    super.key,
+    required this.imageUrls,
+    this.duration = const Duration(milliseconds: 450),
+    this.backgroundColor = Colors.white,
+    this.initialIndex = 0,
+    this.lastPage,
+    this.cutoffForward = 0.8,
+    this.cutoffPrevious = 0.1,
+    this.isRightSwipe = false,
+    this.controller,
+    this.onPageFlipped,
+    this.onFlipStart,
+  }) : assert(initialIndex >= 0 && initialIndex < imageUrls.length);
 
   @override
-  PageFlipWidgetState createState() => PageFlipWidgetState();
+  State<PageFlipWidget> createState() => _PageFlipWidgetState();
 }
 
-class PageFlipWidgetState extends State<PageFlipWidget> with TickerProviderStateMixin {
-  int pageNumber = 0;
-  List<Widget> pages = [];
-  final List<AnimationController> _controllers = [];
+class _PageFlipWidgetState extends State<PageFlipWidget> with TickerProviderStateMixin {
+  int _currentPage = 0;
+  final Map<int, ui.Image> _imageCache = {};
+  late final List<AnimationController> _controllers;
   bool? _isForward;
-
-  @override
-  void didUpdateWidget(PageFlipWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  void dispose() {
-    for (var c in _controllers) {
-      c.dispose();
-    }
-    super.dispose();
-  }
+  int _activeDragPage = -1;
 
   @override
   void initState() {
     super.initState();
-    // Initialize global variables (defined in page_flip.dart)
-    imageData = {};
-    currentPage = ValueNotifier(-1);
-    currentWidget = ValueNotifier(Container());
-    currentPageIndex = ValueNotifier(0);
-    // Associate the controller, if provided, with this state
+    _currentPage = widget.initialIndex;
     widget.controller?._state = this;
-    _setUp();
+    _setupControllers();
+    _preloadImages();
   }
 
-  void _setUp({bool isRefresh = false}) {
-    _controllers.clear();
-    pages.clear();
-    List<Widget> childrenWidgets = widget.imageUrls.map((url) => Image.network(url, fit: BoxFit.fill)).toList();
-    if (widget.lastPage != null) {
-      childrenWidgets.add(widget.lastPage!);
-    }
-
-    for (var i = 0; i < childrenWidgets.length; i++) {
-      final controller = AnimationController(
-        value: 1,
-        duration: widget.duration,
-        vsync: this,
-      );
-      _controllers.add(controller);
-      final child = PageFlipBuilder(
-        amount: controller,
-        backgroundColor: widget.backgroundColor,
-        isRightSwipe: widget.isRightSwipe,
-        pageIndex: i,
-        imageUrl: (i < widget.imageUrls.length) ? widget.imageUrls[i] : null,
-        key: Key('item$i'),
-        child: childrenWidgets[i],
-      );
-      pages.add(child);
-    }
-    pages = pages.reversed.toList();
-    if (isRefresh) {
-      goToPage(pageNumber);
-    } else {
-      pageNumber = widget.initialIndex;
-      lastPageLoad = pages.length < 3 ? 0 : 3;
-    }
-    if (widget.initialIndex != 0) {
-      currentPage = ValueNotifier(widget.initialIndex);
-      currentWidget = ValueNotifier(pages[pageNumber]);
-      currentPageIndex = ValueNotifier(widget.initialIndex);
+  void _setupControllers() {
+    final int totalPages = widget.imageUrls.length + (widget.lastPage != null ? 1 : 0);
+    _controllers = List.generate(
+      totalPages,
+      (_) => AnimationController(vsync: this, duration: widget.duration, value: 1.0),
+    );
+    if (_currentPage > 0) {
+      for (int i = 0; i < _currentPage; i++) {
+        _controllers[i].value = 0.0;
+      }
     }
   }
 
-  bool get _isLastPage => (pages.length - 1) == pageNumber;
-  int lastPageLoad = 0;
-  bool get _isFirstPage => pageNumber == 0;
+  // Eagerly pre-cache images in background to avoid jank on swipe
+  void _preloadImages() async {
+    for (int i = 0; i < widget.imageUrls.length; i++) {
+      _loadImage(i);
+      // หยอดจังหวะให้ Main UI Thread หายใจเวลาโหลดรูปรัวๆ จะได้ไม่กระตุกตอนเปิด Bottomsheet
+      await Future.delayed(const Duration(milliseconds: 30));
+    }
+  }
+
+  Future<void> _loadImage(int index) async {
+    if (index >= widget.imageUrls.length) return;
+    if (_imageCache.containsKey(index)) return;
+    try {
+      final ImageStream stream = NetworkImage(widget.imageUrls[index]).resolve(ImageConfiguration.empty);
+      final Completer<ui.Image> completer = Completer<ui.Image>();
+      late ImageStreamListener listener;
+      listener = ImageStreamListener((ImageInfo info, bool _) {
+        if (!completer.isCompleted) completer.complete(info.image);
+        stream.removeListener(listener);
+      }, onError: (dynamic error, StackTrace? stackTrace) {
+        if (!completer.isCompleted) completer.completeError(error);
+        stream.removeListener(listener);
+      });
+      stream.addListener(listener);
+      final ui.Image img = await completer.future;
+      if (mounted) setState(() => _imageCache[index] = img);
+    } catch (_) {
+      // Ignore network errors, it stays null in cache map
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final AnimationController c in _controllers) {
+      c.dispose();
+    }
+    for (final ui.Image img in _imageCache.values) {
+      img.dispose();
+    }
+    super.dispose();
+  }
+
+  bool get _isLastPage => _currentPage == _controllers.length - 1;
+  bool get _isFirstPage => _currentPage == 0;
 
   void _turnPage(DragUpdateDetails details, BoxConstraints dimens) {
-    // During dragging, update currentPage to trigger the builder's animation effect
-    currentPage.value = pageNumber;
-    currentWidget.value = Container();
-    final ratio = details.delta.dx / dimens.maxWidth;
+    if (_controllers.isEmpty) return;
+    final double ratio = details.delta.dx / dimens.maxWidth;
+
     if (_isForward == null) {
       if (widget.isRightSwipe ? details.delta.dx < 0.0 : details.delta.dx > 0.0) {
         _isForward = false;
@@ -125,146 +131,183 @@ class PageFlipWidgetState extends State<PageFlipWidget> with TickerProviderState
         _isForward = null;
       }
     }
-    if (_isForward == true || pageNumber == 0) {
-      final pageLength = pages.length;
-      final pageSize = widget.lastPage != null ? pageLength : pageLength - 1;
-      if (pageNumber != pageSize && !_isLastPage) {
-        widget.isRightSwipe ? _controllers[pageNumber].value -= ratio : _controllers[pageNumber].value += ratio;
+
+    if (_isForward == true || _currentPage == 0) {
+      if (!_isLastPage) {
+        _activeDragPage = _currentPage;
+        if (widget.isRightSwipe) {
+          _controllers[_currentPage].value -= ratio;
+        } else {
+          _controllers[_currentPage].value += ratio;
+        }
       }
     }
   }
 
-  Future _onDragFinish() async {
+  Future<void> _onDragFinish() async {
     if (_isForward != null) {
       if (_isForward == true) {
-        if (!_isLastPage && _controllers[pageNumber].value <= (widget.cutoffForward + 0.15)) {
+        if (!_isLastPage && _controllers[_currentPage].value <= (widget.cutoffForward + 0.15)) {
           await nextPage();
-        } else {
-          if (!_isLastPage) {
-            await _controllers[pageNumber].forward();
-          }
+        } else if (!_isLastPage) {
+          await _controllers[_currentPage].forward();
         }
       } else {
-        if (!_isFirstPage && _controllers[pageNumber - 1].value >= widget.cutoffPrevious) {
+        if (!_isFirstPage && _controllers[_currentPage - 1].value >= widget.cutoffPrevious) {
           await previousPage();
+        } else if (_isFirstPage) {
+          await _controllers[_currentPage].forward();
         } else {
-          if (_isFirstPage) {
-            await _controllers[pageNumber].forward();
-          } else {
-            await _controllers[pageNumber - 1].reverse();
-            if (!_isFirstPage) {
-              await previousPage();
-            }
-          }
+          await _controllers[_currentPage - 1].reverse();
+          if (!_isFirstPage) await previousPage();
         }
       }
     }
-    _isForward = null;
-    currentPage.value = -1;
+    if (mounted) {
+      setState(() {
+        _isForward = null;
+        _activeDragPage = -1;
+      });
+    }
   }
 
-  /// Triggers the animation to advance to the next page – via gesture or button.
-  Future nextPage() async {
-    // Prevent going beyond the last page
+  Future<void> nextPage() async {
     if (_isLastPage) return;
     widget.onFlipStart?.call();
-    // Update currentPage to trigger the builder effect
-    currentPage.value = pageNumber;
-    await _controllers[pageNumber].reverse();
+    setState(() => _activeDragPage = _currentPage);
+    await _controllers[_currentPage].reverse();
     if (mounted) {
       setState(() {
-        pageNumber++;
+        _currentPage++;
+        _activeDragPage = -1;
       });
-      if (pageNumber < pages.length) {
-        currentPageIndex.value = pageNumber;
-        currentWidget.value = pages[pageNumber];
-      }
-      // In case it is the last page, ensure the notifiers are updated
-      if (_isLastPage) {
-        currentPageIndex.value = pageNumber;
-        currentWidget.value = pages[pageNumber];
-      }
-      widget.onPageFlipped?.call(pageNumber);
+      widget.onPageFlipped?.call(_currentPage);
     }
-    // Reset currentPage after the animation
-    currentPage.value = -1;
   }
 
-  /// Triggers the animation to go back to the previous page – via gesture or button.
-  Future previousPage() async {
-    // Prevent going before the first page
+  Future<void> previousPage() async {
     if (_isFirstPage) return;
     widget.onFlipStart?.call();
-    // Update currentPage to trigger the reverse animation effect
-    currentPage.value = pageNumber - 1;
-    await _controllers[pageNumber - 1].forward();
+    setState(() => _activeDragPage = _currentPage - 1);
+    await _controllers[_currentPage - 1].forward();
     if (mounted) {
       setState(() {
-        pageNumber--;
+        _currentPage--;
+        _activeDragPage = -1;
       });
-      currentPageIndex.value = pageNumber;
-      currentWidget.value = pages[pageNumber];
-      widget.onPageFlipped?.call(pageNumber);
+      widget.onPageFlipped?.call(_currentPage);
     }
-    currentPage.value = -1;
   }
 
-  Future goToPage(int index) async {
-    if (mounted) {
-      setState(() {
-        pageNumber = index;
-      });
-    }
-    for (var i = 0; i < _controllers.length; i++) {
+  Future<void> goToPage(int index) async {
+    if (index < 0 || index >= _controllers.length) return;
+    if (mounted) setState(() => _currentPage = index);
+    for (int i = 0; i < _controllers.length; i++) {
       if (i == index) {
         _controllers[i].forward();
       } else if (i < index) {
         _controllers[i].reverse();
-      } else {
-        if (_controllers[i].status == AnimationStatus.reverse) {
-          _controllers[i].value = 1;
-        }
+      } else if (_controllers[i].status == AnimationStatus.reverse) {
+        _controllers[i].value = 1.0;
       }
     }
-    currentPageIndex.value = pageNumber;
-    currentWidget.value = pages[pageNumber];
-    currentPage.value = pageNumber;
   }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, dimens) => GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: (details) {},
-        onTapUp: (details) {},
-        onPanDown: (details) {},
-        onPanEnd: (details) {},
-        onTapCancel: () {},
-        onHorizontalDragCancel: () => _isForward = null,
-        onHorizontalDragUpdate: (details) => _turnPage(details, dimens),
-        onHorizontalDragEnd: (details) => _onDragFinish(),
-        child: Stack(
-          fit: StackFit.expand,
-          children: pages,
-        ),
+    if (widget.imageUrls.isEmpty) return const SizedBox.shrink();
+
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutQuart,
+      child: Stack(
+        children: [
+          Opacity(
+            opacity: 0.0,
+            child: Image.network(
+              widget.imageUrls.first,
+              width: double.infinity,
+              fit: BoxFit.contain,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const SizedBox(height: 350, width: double.infinity);
+              },
+              errorBuilder: (context, error, stackTrace) => const SizedBox(height: 350, width: double.infinity),
+            ),
+          ),
+          Positioned.fill(
+            child: LayoutBuilder(
+              builder: (context, dimens) {
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onHorizontalDragCancel: () => setState(() => _isForward = null),
+                  onHorizontalDragUpdate: (details) => _turnPage(details, dimens),
+                  onHorizontalDragEnd: (details) => _onDragFinish(),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: List.generate(_controllers.length, (idx) {
+                      final int invertedIdx = _controllers.length - 1 - idx;
+                      return _buildPage(invertedIdx);
+                    }),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
-}
 
-class PageFlipController {
-  PageFlipWidgetState? _state;
+  Widget _buildPage(int index) {
+    final bool isLastPageItem = index == widget.imageUrls.length && widget.lastPage != null;
+    final ui.Image? img = _imageCache[index];
 
-  void nextPage() {
-    _state?.nextPage();
-  }
+    return AnimatedBuilder(
+      animation: _controllers[index],
+      builder: (context, child) {
+        final double amount = _controllers[index].value;
 
-  void previousPage() {
-    _state?.previousPage();
-  }
+        // Performance: Don't render pages completely flipped over
+        if (amount <= 0.0) return const SizedBox.shrink();
 
-  void goToPage(int index) {
-    _state?.goToPage(index);
+        // Performance: Hide underneath pages that are far below the stack
+        if (amount == 1.0 && index > _currentPage + 1) {
+          return const SizedBox.shrink();
+        }
+
+        // Smoothly render page flip effect if animating/dragging
+        if ((amount < 1.0 && amount > 0.0) || _activeDragPage == index) {
+          if (img != null) {
+            return CustomPaint(
+              painter: PageFlipEffect(
+                amount: _controllers[index],
+                image: img,
+                backgroundColor: widget.backgroundColor,
+                isRightSwipe: widget.isRightSwipe,
+              ),
+              size: Size.infinite,
+            );
+          }
+          return ColoredBox(color: widget.backgroundColor);
+        }
+
+        // Static display when page is fully rested on top
+        return ColoredBox(
+          color: widget.backgroundColor,
+          child: (img != null
+              ? RawImage(image: img, fit: BoxFit.fill)
+              : const SizedBox(
+                  height: 350,
+                  width: double.infinity,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  ),
+                )),
+        );
+      },
+    );
   }
 }

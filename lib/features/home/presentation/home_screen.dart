@@ -203,24 +203,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   shape: ContinuousRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(60))),
                                   sheetAnimationStyle: AnimationStyle(duration: const Duration(milliseconds: 150)),
                                   builder: (BuildContext builderContext) {
-                                    return AutoSizedPageFlip(
-                                      imageUrls: const [
-                                        'http://www.normalsteak.in/i/n1.png',
-                                        'http://www.normalsteak.in/i/n2.png',
-                                        'http://www.normalsteak.in/i/n3.png',
-                                        'http://www.normalsteak.in/i/n4.png',
-                                        'http://www.normalsteak.in/i/n5.png',
-                                        'http://www.normalsteak.in/i/n6.png',
-                                        'http://www.normalsteak.in/i/n7.png',
-                                        'http://www.normalsteak.in/i/n8.png',
-                                        'http://www.normalsteak.in/i/n9.png',
-                                        'http://www.normalsteak.in/i/n10.png',
-                                        'http://www.normalsteak.in/i/n11.png',
-                                        'http://www.normalsteak.in/i/n12.png',
-                                        'http://www.normalsteak.in/i/n13.png',
-                                        'http://www.normalsteak.in/i/n14.png',
-                                        'http://www.normalsteak.in/i/n15.png',
-                                        'http://www.normalsteak.in/i/n16.png',
+                                    return Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // Header
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              const Text('เมนูอาหาร', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                              IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
+                                            ],
+                                          ),
+                                        ),
+                                        // Content
+                                        Flexible(
+                                          child: PageFlipWidget(
+                                            backgroundColor: Colors.white,
+                                            imageUrls: [
+                                              'https://kkndpqqmsswhgnupsznq.supabase.co/storage/v1/object/public/Public/n1.webp',
+                                              'http://www.normalsteak.in/i/n2.png',
+                                              'http://www.normalsteak.in/i/n3.png',
+                                              'http://www.normalsteak.in/i/n4.png',
+                                              'http://www.normalsteak.in/i/n5.png',
+                                              'http://www.normalsteak.in/i/n6.png',
+                                              'http://www.normalsteak.in/i/n7.png',
+                                              'http://www.normalsteak.in/i/n8.png',
+                                              'http://www.normalsteak.in/i/n9.png',
+                                              'http://www.normalsteak.in/i/n10.png',
+                                              'http://www.normalsteak.in/i/n11.png',
+                                              'http://www.normalsteak.in/i/n12.png',
+                                              'http://www.normalsteak.in/i/n13.png',
+                                              'http://www.normalsteak.in/i/n14.png',
+                                              'http://www.normalsteak.in/i/n15.png',
+                                              'http://www.normalsteak.in/i/n16.png',
+                                            ],
+                                          ),
+                                        ),
                                       ],
                                     );
                                   },
@@ -377,69 +397,6 @@ class Menu extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class AutoSizedPageFlip extends StatefulWidget {
-  final List<String> imageUrls;
-  const AutoSizedPageFlip({super.key, required this.imageUrls});
-
-  @override
-  State<AutoSizedPageFlip> createState() => _AutoSizedPageFlipState();
-}
-
-class _AutoSizedPageFlipState extends State<AutoSizedPageFlip> {
-  double? _aspectRatio;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchAspectRatio();
-  }
-
-  void _fetchAspectRatio() {
-    if (widget.imageUrls.isEmpty) return;
-    final stream = NetworkImage(widget.imageUrls.first).resolve(const ImageConfiguration());
-    late ImageStreamListener listener;
-    listener = ImageStreamListener((ImageInfo info, bool _) {
-      if (mounted) {
-        setState(() {
-          _aspectRatio = info.image.width / info.image.height;
-        });
-      }
-      stream.removeListener(listener);
-    });
-    stream.addListener(listener);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_aspectRatio == null) {
-      return const SizedBox(height: 300, child: Center(child: CircularProgressIndicator()));
-    }
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('เมนูอาหาร', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
-            ],
-          ),
-        ),
-        // Content
-        Flexible(
-          child: AspectRatio(
-            aspectRatio: _aspectRatio!,
-            child: PageFlipWidget(backgroundColor: Colors.white, imageUrls: widget.imageUrls),
-          ),
-        ),
-      ],
     );
   }
 }

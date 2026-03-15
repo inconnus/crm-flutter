@@ -11,13 +11,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _controller = GlobalKey<PageFlipWidgetState>();
+  final _controller = PageFlipController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: PageFlipWidget(
-        key: _controller,
+        controller: _controller,
         backgroundColor: Colors.yellow,
         initialIndex: 0,
         // isRightSwipe: true,
@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.looks_5_outlined),
         onPressed: () {
-          _controller.currentState?.goToPage(5);
+          _controller.goToPage(5);
         },
       ),
     );
