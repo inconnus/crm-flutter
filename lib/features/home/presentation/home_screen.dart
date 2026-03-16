@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:crm/core/utils/ui_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_flip/page_flip.dart';
@@ -194,60 +195,69 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               backgroundColor: Color(0xFFcd2a2f),
                               textColor: Colors.white,
                               onTap: () {
-                                showModalBottomSheet(
+                                showCustomModalBottomSheet(
                                   context: context,
-                                  useRootNavigator: true,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.white,
-                                  //
-                                  shape: ContinuousRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(60))),
-                                  sheetAnimationStyle: AnimationStyle(duration: const Duration(milliseconds: 150)),
+                                  builder: (BuildContext builderContext) => DefaultTabController(
+                                    length: 2,
+                                    child: FractionallySizedBox(
+                                      heightFactor: 0.85,
+                                      child: Column(
+                                        children: [
+                                          TabBar(
+                                            tabs: [
+                                              Tab(text: 'ไปตอนนี้', height: 60, icon: Icon(Icons.now_widgets_outlined)),
+                                              Tab(text: 'จองล่วงหน้า', height: 60, icon: Icon(Icons.calendar_month_outlined)),
+                                            ],
+                                            indicatorSize: TabBarIndicatorSize.tab,
+                                            indicatorColor: Color(0xFFcd2a2f),
+                                            labelColor: Colors.white,
+
+                                            indicator: BoxDecoration(
+                                              color: Color(0xFFcd2a2f), // สีพื้นหลังเฉพาะตัวที่เลือก
+                                            ),
+                                          ),
+
+                                          Expanded(child: TabBarView(children: [Text('จองคิว'), Text('ประวัติการจอง')])),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            Menu(
+                              text: 'สั่งอาหาร',
+                              icon: Icons.food_bank_outlined,
+                              onTap: () {
+                                showCustomModalBottomSheet(
+                                  context: context,
+                                  title: 'เมนูอาหาร',
                                   builder: (BuildContext builderContext) {
-                                    return Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        // Header
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              const Text('เมนูอาหาร', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                              IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
-                                            ],
-                                          ),
-                                        ),
-                                        // Content
-                                        Flexible(
-                                          child: PageFlipWidget(
-                                            backgroundColor: Colors.white,
-                                            imageUrls: [
-                                              'https://kkndpqqmsswhgnupsznq.supabase.co/storage/v1/object/public/Public/n1.webp',
-                                              'http://www.normalsteak.in/i/n2.png',
-                                              'http://www.normalsteak.in/i/n3.png',
-                                              'http://www.normalsteak.in/i/n4.png',
-                                              'http://www.normalsteak.in/i/n5.png',
-                                              'http://www.normalsteak.in/i/n6.png',
-                                              'http://www.normalsteak.in/i/n7.png',
-                                              'http://www.normalsteak.in/i/n8.png',
-                                              'http://www.normalsteak.in/i/n9.png',
-                                              'http://www.normalsteak.in/i/n10.png',
-                                              'http://www.normalsteak.in/i/n11.png',
-                                              'http://www.normalsteak.in/i/n12.png',
-                                              'http://www.normalsteak.in/i/n13.png',
-                                              'http://www.normalsteak.in/i/n14.png',
-                                              'http://www.normalsteak.in/i/n15.png',
-                                              'http://www.normalsteak.in/i/n16.png',
-                                            ],
-                                          ),
-                                        ),
+                                    return PageFlipWidget(
+                                      backgroundColor: Colors.white,
+                                      imageUrls: [
+                                        'https://kkndpqqmsswhgnupsznq.supabase.co/storage/v1/object/public/Public/n1.webp',
+                                        'http://www.normalsteak.in/i/n2.png',
+                                        'http://www.normalsteak.in/i/n3.png',
+                                        'http://www.normalsteak.in/i/n4.png',
+                                        'http://www.normalsteak.in/i/n5.png',
+                                        'http://www.normalsteak.in/i/n6.png',
+                                        'http://www.normalsteak.in/i/n7.png',
+                                        'http://www.normalsteak.in/i/n8.png',
+                                        'http://www.normalsteak.in/i/n9.png',
+                                        'http://www.normalsteak.in/i/n10.png',
+                                        'http://www.normalsteak.in/i/n11.png',
+                                        'http://www.normalsteak.in/i/n12.png',
+                                        'http://www.normalsteak.in/i/n13.png',
+                                        'http://www.normalsteak.in/i/n14.png',
+                                        'http://www.normalsteak.in/i/n15.png',
+                                        'http://www.normalsteak.in/i/n16.png',
                                       ],
                                     );
                                   },
                                 );
                               },
                             ),
-                            Menu(text: 'ประวัติ', icon: Icons.history_rounded),
                             Menu(text: 'รางวัล', icon: Icons.wallet_giftcard_rounded),
                           ],
                         ),
@@ -277,11 +287,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 20),
                               separatorBuilder: (context, index) => const SizedBox(width: 10),
                               itemBuilder: (context, index) {
-                                return Container(
-                                  width: 140,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    image: DecorationImage(image: AssetImage('assets/images/s1.jpg'), fit: BoxFit.cover),
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context, rootNavigator: true).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => Scaffold(
+                                          body: Column(
+                                            children: [
+                                              Hero(
+                                                tag: 'image$index',
+                                                child: ClipRRect(
+                                                  borderRadius: BorderRadius.circular(0),
+                                                  child: Image.asset('assets/images/s1.jpg', fit: BoxFit.cover),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 140,
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: Column(
+                                      children: [
+                                        Hero(
+                                          tag: 'image$index',
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(20),
+                                            child: Image.asset('assets/images/s1.jpg', height: 140, fit: BoxFit.cover),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 );
                               },
