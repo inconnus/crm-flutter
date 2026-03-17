@@ -1,8 +1,6 @@
-import 'dart:math';
-
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:crm/core/utils/ui_helpers.dart';
-import 'package:crm/features/home/presentation/booking_screen.dart';
+import 'package:crm/features/booking/presentation/booking_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_flip/page_flip.dart';
@@ -136,7 +134,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           alignment: Alignment.topCenter,
                           child: Container(
                             width: 40,
-                            height: 6,
+                            height: 5,
                             decoration: BoxDecoration(color: const Color.fromARGB(255, 218, 218, 218), borderRadius: BorderRadius.circular(10)),
                           ),
                         ),
@@ -393,7 +391,6 @@ class Menu extends ConsumerWidget {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(100), // ต้องเท่ากับปุ่ม
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withAlpha(50), // สีเงาและความโปร่งใส

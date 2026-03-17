@@ -1,3 +1,4 @@
+import 'package:crm/features/booking/presentation/quantity_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -182,11 +183,12 @@ class BranchCard extends ConsumerWidget {
                     shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: EdgeInsets.symmetric(vertical: 12),
                   ),
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => Container(color: Colors.white),
+                        builder: (context) => QuantityScreen(),
                         settings: const RouteSettings(arguments: 'เลือกจำนวนคน'),
                       ),
                     );
@@ -205,6 +207,7 @@ class BranchCard extends ConsumerWidget {
                     shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: EdgeInsets.symmetric(vertical: 12),
                   ),
                   onPressed: () {},
                   icon: Icon(Icons.calendar_month_rounded),

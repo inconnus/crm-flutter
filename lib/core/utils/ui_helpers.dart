@@ -117,6 +117,14 @@ class _NestedNavigatorContentState extends State<_NestedNavigatorContent> {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
+                        Positioned(
+                          top: 5,
+                          child: Container(
+                            width: 40,
+                            height: 5,
+                            decoration: BoxDecoration(color: const Color.fromARGB(255, 218, 218, 218), borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
                         if (!_canPopOuter)
                           Align(
                             alignment: Alignment.centerLeft,
