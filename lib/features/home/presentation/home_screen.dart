@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:crm/core/utils/ui_helpers.dart';
+import 'package:crm/features/home/presentation/booking_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_flip/page_flip.dart';
@@ -195,33 +196,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               backgroundColor: Color(0xFFcd2a2f),
                               textColor: Colors.white,
                               onTap: () {
-                                showCustomModalBottomSheet(
+                                showCustomModalBottomSheetFull(
                                   context: context,
-                                  builder: (BuildContext builderContext) => DefaultTabController(
-                                    length: 2,
-                                    child: FractionallySizedBox(
-                                      heightFactor: 0.85,
-                                      child: Column(
-                                        children: [
-                                          TabBar(
-                                            tabs: [
-                                              Tab(text: 'ไปตอนนี้', height: 60, icon: Icon(Icons.now_widgets_outlined)),
-                                              Tab(text: 'จองล่วงหน้า', height: 60, icon: Icon(Icons.calendar_month_outlined)),
-                                            ],
-                                            indicatorSize: TabBarIndicatorSize.tab,
-                                            indicatorColor: Color(0xFFcd2a2f),
-                                            labelColor: Colors.white,
-
-                                            indicator: BoxDecoration(
-                                              color: Color(0xFFcd2a2f), // สีพื้นหลังเฉพาะตัวที่เลือก
-                                            ),
-                                          ),
-
-                                          Expanded(child: TabBarView(children: [Text('จองคิว'), Text('ประวัติการจอง')])),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
+                                  title: 'จองคิว',
+                                  builder: (BuildContext builderContext, ScrollController scrollController) =>
+                                      BookingScreen(scrollController: scrollController),
                                 );
                               },
                             ),
@@ -289,22 +268,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               itemBuilder: (context, index) {
                                 return GestureDetector(
                                   onTap: () {
-                                    Navigator.of(context, rootNavigator: true).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => Scaffold(
-                                          body: Column(
-                                            children: [
-                                              Hero(
-                                                tag: 'image$index',
-                                                child: ClipRRect(
-                                                  borderRadius: BorderRadius.circular(0),
-                                                  child: Image.asset('assets/images/s1.jpg', fit: BoxFit.cover),
+                                    showCustomModalBottomSheet(
+                                      context: context,
+                                      builder: (context) {
+                                        return FractionallySizedBox(
+                                          heightFactor: 0.95,
+                                          child: Scaffold(
+                                            body: Column(
+                                              children: [
+                                                Hero(
+                                                  tag: 'image$index',
+                                                  child: ClipRRect(
+                                                    borderRadius: BorderRadius.circular(0),
+                                                    child: Image.asset('assets/images/s1.jpg', fit: BoxFit.cover),
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ),
+                                        );
+                                      },
                                     );
                                   },
                                   child: Container(

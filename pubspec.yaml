@@ -47,6 +47,7 @@ dependencies:
   flip_curl_animation_widget: ^0.1.0
   page_curl_effect: ^1.0.2
   swipable_stack: ^2.0.0
+  modal_bottom_sheet: ^3.0.0
 
 dev_dependencies:
   flutter_test:
