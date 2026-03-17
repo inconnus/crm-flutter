@@ -74,6 +74,14 @@ class _NestedNavigatorContentState extends State<_NestedNavigatorContent> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   bool _canPopOuter = true;
   bool _forceClose = false;
+  String? _currentTitle;
+  bool _isPop = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentTitle = widget.title;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,8 +130,33 @@ class _NestedNavigatorContentState extends State<_NestedNavigatorContent> {
                               },
                             ),
                           ),
-                        Center(
-                          child: Text(widget.title!, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          transitionBuilder: (Widget child, Animation<double> animation) {
+                            final isIncoming = child.key == ValueKey<String?>(_currentTitle);
+                            Offset beginOffset;
+
+                            if (!_isPop) {
+                              // Push direction
+                              beginOffset = isIncoming ? const Offset(1.0, 0.0) : const Offset(-1.0, 0.0);
+                            } else {
+                              // Pop direction
+                              beginOffset = isIncoming ? const Offset(-1.0, 0.0) : const Offset(1.0, 0.0);
+                            }
+
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(animation),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: Text(
+                            _currentTitle ?? '',
+                            key: ValueKey<String?>(_currentTitle),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
                         ),
                         Align(
                           alignment: Alignment.centerRight,
@@ -144,13 +177,17 @@ class _NestedNavigatorContentState extends State<_NestedNavigatorContent> {
                     key: _navigatorKey,
                     observers: [
                       _PopObserver(
-                        onPopStateChanged: (canPopInner) {
+                        onRouteChanged: (canPopInner, routeTitle, isPop) {
                           final shouldPopOuter = !canPopInner;
-                          if (_canPopOuter != shouldPopOuter) {
+                          final nextTitle = routeTitle ?? widget.title;
+                          if (_canPopOuter != shouldPopOuter || _currentTitle != nextTitle) {
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               if (mounted) {
+                                // Update state with pop flag to drive the proper direction
                                 setState(() {
                                   _canPopOuter = shouldPopOuter;
+                                  _isPop = isPop;
+                                  _currentTitle = nextTitle;
                                 });
                               }
                             });
@@ -158,9 +195,7 @@ class _NestedNavigatorContentState extends State<_NestedNavigatorContent> {
                         },
                       ),
                     ],
-                    onGenerateRoute: (settings) => MaterialPageRoute(
-                      builder: (navContext) => widget.builder(navContext, scrollController),
-                    ),
+                    onGenerateRoute: (settings) => MaterialPageRoute(builder: (navContext) => widget.builder(navContext, scrollController)),
                   ),
                 ),
               ],
@@ -173,34 +208,41 @@ class _NestedNavigatorContentState extends State<_NestedNavigatorContent> {
 }
 
 class _PopObserver extends NavigatorObserver {
-  final ValueChanged<bool> onPopStateChanged;
-  _PopObserver({required this.onPopStateChanged});
+  final void Function(bool canPop, String? currentTitle, bool isPop) onRouteChanged;
+  _PopObserver({required this.onRouteChanged});
 
-  void _notify() {
-    Future.microtask(() => onPopStateChanged(navigator?.canPop() ?? false));
+  void _update(Route<dynamic>? topRoute, bool isPop) {
+    bool canPop = navigator?.canPop() ?? false;
+    String? title;
+    if (topRoute?.settings.arguments is String) {
+      title = topRoute!.settings.arguments as String;
+    } else if (topRoute?.settings.arguments is Map && (topRoute?.settings.arguments as Map).containsKey('title')) {
+      title = (topRoute?.settings.arguments as Map)['title'] as String?;
+    }
+    Future.microtask(() => onRouteChanged(canPop, title, isPop));
   }
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
-    _notify();
+    _update(route, false);
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
-    _notify();
+    _update(previousRoute, true);
   }
 
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didRemove(route, previousRoute);
-    _notify();
+    _update(previousRoute, true);
   }
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
-    _notify();
+    _update(newRoute, false);
   }
 }

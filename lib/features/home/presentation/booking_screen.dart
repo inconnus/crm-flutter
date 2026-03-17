@@ -184,7 +184,12 @@ class BranchCard extends ConsumerWidget {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => Container(color: Colors.white)));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => Container(color: Colors.white),
+                        settings: const RouteSettings(arguments: 'เลือกจำนวนคน'),
+                      ),
+                    );
                   },
                   icon: Icon(Icons.location_on),
                   label: Text('ไปตอนนี้'),
