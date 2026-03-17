@@ -150,9 +150,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           children: [
                             CircleAvatar(
                               radius: 22,
-                              backgroundImage: NetworkImage(
-                                'https://scontent.fbkk12-3.fna.fbcdn.net/v/t39.30808-6/460039832_1939010103263800_8042369095264618016_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=C-Pf_By57TEQ7kNvwHBZL9K&_nc_oc=AdnR4rzZyAT9mTWJPqOLcurg1eATka4FiQbuQlW7l6p-ipMvyVzlXeaHeTq2sXeq7uo&_nc_zt=23&_nc_ht=scontent.fbkk12-3.fna&_nc_gid=S9Zxa-uJLtOe5txuZDfO5w&_nc_ss=8&oh=00_AfwNvpOHz4n_ClyCn82U8EoNY1vCWZKN7yI6BqCTMRy-xw&oe=69B6D33A',
-                              ),
+                              backgroundImage: NetworkImage('https://kkndpqqmsswhgnupsznq.supabase.co/storage/v1/object/public/Public/256.webp'),
                             ),
                             SizedBox(width: 10),
                             Expanded(
@@ -393,30 +391,28 @@ class Menu extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: 50,
-          decoration: ShapeDecoration(
-            // gradient: LinearGradient(colors: [Color(0xFFb81d22), color], begin: Alignment.topCenter, end: Alignment.bottomCenter),
-            color: backgroundColor,
-
-            shadows: [BoxShadow(color: Colors.grey.withAlpha(50), spreadRadius: 0, blurRadius: 10, offset: const Offset(0, 0))],
-            shape: ContinuousRectangleBorder(
-              borderRadius: BorderRadius.circular(40),
-              side: BorderSide(color: Colors.white),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(100), // ต้องเท่ากับปุ่ม
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withAlpha(50), // สีเงาและความโปร่งใส
+              blurRadius: 10, // ความฟุ้ง (ยิ่งเยอะยิ่งนุ่ม)
+              offset: const Offset(0, 0), // <--- ตรงนี้คือ Offset (เลื่อนลงล่าง 5 หน่วย)
             ),
-          ),
-          child: Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: textColor),
-                SizedBox(width: 4),
-                Text(text, style: TextStyle(color: textColor)),
-                // Icon(Icons.chevron_right_rounded, color: Colors.white),
-              ],
-            ),
+          ],
+        ),
+        child: TextButton.icon(
+          onPressed: () {
+            onTap?.call();
+          },
+          icon: Icon(icon, color: textColor, size: 22),
+          label: Text(text),
+          style: TextButton.styleFrom(
+            backgroundColor: backgroundColor,
+            foregroundColor: textColor,
+            shape: const ContinuousRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(40))),
+            minimumSize: const Size(0, 50),
           ),
         ),
       ),

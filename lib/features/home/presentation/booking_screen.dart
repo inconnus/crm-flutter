@@ -20,7 +20,11 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 5,
           children: [
-            Text('สาขาไกล้เคียง', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            SizedBox(height: 5),
+            Text(
+              'สาขาไกล้เคียง',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[600]),
+            ),
             ListView.separated(
               physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
@@ -31,7 +35,11 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                 return const BranchCard();
               },
             ),
-            Text('สาขาไกล้เคียง', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            SizedBox(height: 5),
+            Text(
+              'สาขาอื่นๆ',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[600]),
+            ),
             ListView.separated(
               physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
@@ -63,6 +71,31 @@ class BranchCard extends ConsumerWidget {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
+          Stack(
+            children: [
+              Image.network(
+                'https://lh3.googleusercontent.com/gps-cs-s/AHVAweorHJUKkSDCC07rgz7XE1pSHgFfBgVOibNlt0Jxk7InjT8HpUJygtff8oKeWaWuVCJGTnyaQIVoCblHKMNtQ0Xfql-A-m7Yos4I9sBOHwqqiF7zYkwz1cyz11Q2nq5gUq_bpLD7=s1360-w1360-h1020-rw',
+                width: double.infinity,
+                height: 80,
+                fit: BoxFit.cover,
+              ),
+              Positioned(
+                bottom: 5,
+                right: 5,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: Color(0xFFcd2a2f),
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 0),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: () {},
+                  child: Text('10.00 - 20.00 น.', style: TextStyle(fontSize: 13)),
+                ),
+              ),
+            ],
+          ),
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -108,7 +141,7 @@ class BranchCard extends ConsumerWidget {
                               TextSpan(text: 'ประมาณ '),
                               TextSpan(
                                 text: '10',
-                                style: TextStyle(color: Color(0xFFcd2a2f)),
+                                style: TextStyle(color: Color(0xFFcd2a2f), fontWeight: FontWeight.bold),
                               ),
                               TextSpan(text: ' นาที'),
                             ],
@@ -150,7 +183,9 @@ class BranchCard extends ConsumerWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => Container(color: Colors.white)));
+                  },
                   icon: Icon(Icons.location_on),
                   label: Text('ไปตอนนี้'),
                 ),

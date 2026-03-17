@@ -55,13 +55,45 @@ Future<void> showCustomModalBottomSheetFull({
     clipBehavior: Clip.antiAlias,
     useSafeArea: true,
     builder: (context) {
-      return DraggableScrollableSheet(
-        initialChildSize: 0.95, // เปิดมาครั้งแรกสูง 50% ของจอ
-        minChildSize: 0, // ลากลงต่ำสุดได้ 30%
-        maxChildSize: 0.95, // ลากขึ้นสูงสุดได้เกือบเต็มจอ (95%)
+      return _NestedNavigatorContent(builder: builder, title: title);
+    },
+  );
+}
+
+class _NestedNavigatorContent extends StatefulWidget {
+  final Widget Function(BuildContext, ScrollController) builder;
+  final String? title;
+
+  const _NestedNavigatorContent({required this.builder, this.title});
+
+  @override
+  State<_NestedNavigatorContent> createState() => _NestedNavigatorContentState();
+}
+
+class _NestedNavigatorContentState extends State<_NestedNavigatorContent> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  bool _canPopOuter = true;
+  bool _forceClose = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: _forceClose || _canPopOuter,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        final nav = _navigatorKey.currentState;
+        if (nav != null && nav.canPop()) {
+          nav.pop();
+        }
+      },
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.95,
+        minChildSize: 0,
+        maxChildSize: 0.95,
         expand: false,
         snap: true,
-        snapSizes: [0],
+        snapSizes: const [0],
         snapAnimationDuration: const Duration(milliseconds: 150),
         builder: (context, scrollController) {
           return Container(
@@ -71,49 +103,104 @@ Future<void> showCustomModalBottomSheetFull({
             ),
             child: Column(
               children: [
-                if (title != null)
+                if (widget.title != null)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
+                        if (!_canPopOuter)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: IconButton(
+                              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                              onPressed: () {
+                                final nav = _navigatorKey.currentState;
+                                if (nav != null && nav.canPop()) {
+                                  nav.pop();
+                                }
+                              },
+                            ),
+                          ),
                         Center(
-                          child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          child: Text(widget.title!, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         ),
                         Align(
                           alignment: Alignment.centerRight,
-                          child: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => Navigator.of(context).pop()),
+                          child: IconButton(
+                            icon: const Icon(Icons.close_rounded),
+                            onPressed: () {
+                              setState(() => _forceClose = true);
+                              Navigator.of(context).pop();
+                            },
+                          ),
                         ),
                       ],
                     ),
                   ),
                 Divider(height: 0, color: Colors.grey[200]),
-                Expanded(child: builder(context, scrollController)),
-                // 1. ส่วนแถบสำหรับลาก (Grabber)
-                // _buildHandle(),
-
-                // 2. ส่วนเนื้อหาที่ Scroll ได้
-                // Expanded(
-                //   child: ListView.separated(
-                //     // *** สำคัญที่สุด: ต้องใส่ controller นี้ ***
-                //     controller: scrollController,
-                //     itemCount: 50,
-                //     separatorBuilder: (context, index) => const Divider(),
-                //     itemBuilder: (context, index) {
-                //       return ListTile(
-                //         leading: CircleAvatar(child: Text('${index + 1}')),
-                //         title: Text('ข้อมูลแถวที่ ${index + 1}'),
-                //         subtitle: const Text('ลองไถขึ้นลงเพื่อดูการทำงาน'),
-                //         onTap: () => print('Tabbed on $index'),
-                //       );
-                //     },
-                //   ),
-                // ),
+                Expanded(
+                  child: Navigator(
+                    key: _navigatorKey,
+                    observers: [
+                      _PopObserver(
+                        onPopStateChanged: (canPopInner) {
+                          final shouldPopOuter = !canPopInner;
+                          if (_canPopOuter != shouldPopOuter) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted) {
+                                setState(() {
+                                  _canPopOuter = shouldPopOuter;
+                                });
+                              }
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                    onGenerateRoute: (settings) => MaterialPageRoute(
+                      builder: (navContext) => widget.builder(navContext, scrollController),
+                    ),
+                  ),
+                ),
               ],
             ),
           );
         },
-      );
-    },
-  );
+      ),
+    );
+  }
+}
+
+class _PopObserver extends NavigatorObserver {
+  final ValueChanged<bool> onPopStateChanged;
+  _PopObserver({required this.onPopStateChanged});
+
+  void _notify() {
+    Future.microtask(() => onPopStateChanged(navigator?.canPop() ?? false));
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    _notify();
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    _notify();
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didRemove(route, previousRoute);
+    _notify();
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    _notify();
+  }
 }
