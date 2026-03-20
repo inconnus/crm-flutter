@@ -1,4 +1,6 @@
 import 'package:crm/features/booking/presentation/quantity_screen.dart';
+import 'package:crm/features/booking/presentation/schedule_screen.dart';
+import 'package:crm/features/booking/providers/queue_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -63,6 +65,8 @@ class BranchCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final queueAsync = ref.watch(queueProvider);
+    print(queueAsync);
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -125,7 +129,7 @@ class BranchCard extends ConsumerWidget {
                             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                             children: [
                               TextSpan(
-                                text: '124',
+                                text: queueAsync.value?.length.toString(),
                                 style: TextStyle(color: Color(0xFFcd2a2f)),
                               ),
                               TextSpan(
@@ -209,7 +213,14 @@ class BranchCard extends ConsumerWidget {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     padding: EdgeInsets.symmetric(vertical: 12),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ScheduleScreen(),
+                        settings: const RouteSettings(arguments: 'เลือกจำนวนคน'),
+                      ),
+                    );
+                  },
                   icon: Icon(Icons.calendar_month_rounded),
                   label: Text('จองล่วงหน้า'),
                 ),

@@ -391,6 +391,7 @@ class Menu extends ConsumerWidget {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(100), // ต้องเท่ากับปุ่ม
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withAlpha(50), // สีเงาและความโปร่งใส

@@ -10,8 +10,6 @@ class ScaffoldContainer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Material(
-      child: Scaffold(extendBody: true, body: child, bottomNavigationBar: bottomNavigationBar),
-    );
+    return Scaffold(extendBody: true, body: child, bottomNavigationBar: bottomNavigationBar);
   }
 }

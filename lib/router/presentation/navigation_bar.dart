@@ -94,7 +94,7 @@ class NavigationBarContainer extends ConsumerWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 _buildTab(0, Icons.home_rounded, 'หน้าแรก'),
-                                _buildTab(1, Icons.map_rounded, 'สาขา'),
+                                _buildTab(1, Icons.store_rounded, 'ร้านค้า'),
                                 _buildTab(2, Icons.person_rounded, 'โปรไฟล์'),
                               ],
                             ),
@@ -135,7 +135,7 @@ class TabButton extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 30, color: Color(0xFF373737)),
+            Icon(icon, size: 25, color: Color(0xFF373737)),
             Text(title, style: TextStyle(fontSize: 13, color: Color(0xFF373737))),
           ],
         ),
